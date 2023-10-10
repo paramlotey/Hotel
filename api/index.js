@@ -6,6 +6,7 @@ const port = 3000;
 
 const roomRoutes = require("./Routes/roomRoute");
 const userRoutes = require("./Routes/userRoute");
+const bookingRoutes = require("./Routes/bookingRoute");
 
 const db = async () => {
   try {
@@ -25,6 +26,7 @@ app.use(cors());
 
 app.use("/", roomRoutes);
 app.use("/", userRoutes);
+app.use("/", bookingRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");

@@ -1,14 +1,24 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import Loader from "../Components/Loader";
 import Error from "../Components/Error";
+import moment from "moment";
+import Swal from "sweetalert2"
 
 const Bookingscreen = () => {
-  const { roomid } = useParams();
+  const { roomid, fromdate, todate } = useParams();
   const [room, setRoom] = useState([]);
   const [loading, setLoading] = useState();
   const [error, setError] = useState();
+
+  const navigate = useNavigate()
+  
+  const firstdate = moment(fromdate , 'DD-MM-YYYY')
+  const lastdate = moment(todate , 'DD-MM-YYYY')
+  
+  const totaldays = moment.duration(lastdate.diff(firstdate)).asDays()+1
+  const [totalamount,setTotalamount] = useState()
 
   useEffect(() => {
     async function fetchData() {
@@ -16,6 +26,7 @@ const Bookingscreen = () => {
         setLoading(true);
         const response = (await axios.post("/getroombyid", { roomid: roomid }))
           .data;
+        setTotalamount(response.rentperday * totaldays)
         setRoom(response);
         console.log(response);
         setTimeout(() => {
@@ -31,19 +42,43 @@ const Bookingscreen = () => {
     fetchData();
   }, []);
 
+  const bookroom = async ()=>{
+    const bookingdetails = {
+      room,
+      userid:JSON.parse(localStorage.getItem('currentUser')).id,
+      fromdate,
+      todate,
+      totalamount,
+      totaldays
+    }
+    try {
+      setLoading(true)
+      const result = await axios.post('/bookroom',bookingdetails)
+      setLoading(false)
+      Swal.fire('Congratulations',"You have successfully booked the room","success").then(() =>{
+        navigate("/bookings")
+      })
+      console.log(result)
+    } catch (error) {
+      console.log(error)
+      setLoading(false)
+      Swal.fire('Error',"An error occurred","error")
+    }
+  }
+
   return (
     <>
       {loading ? (
         <>
-          <Loader/>
+          <Loader />
         </>
       ) : error ? (
         <>
-          <Error/>
+          <Error />
         </>
       ) : (
         <>
-          <div className="container "data-aos="flip-down">
+          <div className="container " data-aos="flip-down">
             <div className="row bs m-5 p-5">
               <div className="col-sm-7">
                 <h2>{room.roomname}</h2>
@@ -61,20 +96,20 @@ const Bookingscreen = () => {
                 <div className="">
                   <h2>Booking Details</h2>
                   <hr />
-                  <h5>Name : </h5>
-                  <h5>From Date : </h5>
-                  <h5>To Date : </h5>
+                  <h5>Name : {JSON.parse(localStorage.getItem('currentUser')).name}</h5>
+                  <h5>From Date : {fromdate}</h5>
+                  <h5>To Date : {todate}</h5>
                   <h5>Max Count : {room.maxcount}</h5>
 
                   <br />
 
                   <h2>Amount</h2>
                   <hr />
-                  <h5>Total Days : </h5>
-                  <h5>Rent Per Day : {room.rentperday}</h5>
-                  <h5>Total Amount : </h5>
+                  <h5>Total Days : {totaldays}</h5>
+                  <h5>Rent Per Day : &#8377; {room.rentperday}</h5>
+                  <h5>Total Amount : &#8377; {totalamount}</h5>
 
-                  <button className="btn btn-dark float-end">Pay Now</button>
+                  <button className="btn btn-dark float-end" onClick={bookroom}>Pay Now</button>
                 </div>
               </div>
             </div>

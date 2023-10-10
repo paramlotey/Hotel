@@ -14,7 +14,7 @@ function App() {
         <Navbar />
         <Routes>
           <Route path="/home" element={<Homescreen />} />
-          <Route path="/book/:roomid" element={<Bookingscreen />} />
+          <Route path="/book/:roomid/:fromdate/:todate" element={<Bookingscreen />} />
           <Route path="/login" element={<Loginscreen/>} />
           <Route path="/register" element={<Registerscreen/>} />
         </Routes>
